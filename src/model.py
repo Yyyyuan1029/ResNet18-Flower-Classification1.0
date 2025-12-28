@@ -1,63 +1,45 @@
+# src/model.py
 import torch
 import torch.nn as nn
 import torchvision.models as models
 
-class ResNet18Classifier(nn.Module):
-    """
-    ResNet18 model for flower classification with transfer learning
-    """
-    
-    def __init__(self, num_classes=3, pretrained=True, freeze_backbone=True):
-        """
-        Initialize ResNet18 classifier
+class ResNet18FlowerClassifier(nn.Module):
+    def __init__(self, num_classes=5, pretrained=True, freeze_layers=True):
+        super(ResNet18FlowerClassifier, self).__init__()
         
-        Args:
-            num_classes: Number of output classes
-            pretrained: Use ImageNet pre-trained weights
-            freeze_backbone: Freeze convolutional layers for transfer learning
-        """
-        super(ResNet18Classifier, self).__init__()
-        
-        # Load pre-trained ResNet18
+        # 加载预训练ResNet18
         self.resnet = models.resnet18(pretrained=pretrained)
         
-        # Freeze backbone layers if specified
-        if freeze_backbone:
+        # 冻结前几层
+        if freeze_layers:
             for param in self.resnet.parameters():
                 param.requires_grad = False
         
-        # Replace the final fully connected layer
+        # 修改最后一层
         num_features = self.resnet.fc.in_features
-        self.resnet.fc = nn.Linear(num_features, num_classes)
-        
-        # Initialize the new layer
-        nn.init.xavier_uniform_(self.resnet.fc.weight)
-        if self.resnet.fc.bias is not None:
-            nn.init.constant_(self.resnet.fc.bias, 0)
+        self.resnet.fc = nn.Sequential(
+            nn.Dropout(0.5),
+            nn.Linear(num_features, 256),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(256, num_classes)
+        )
     
     def forward(self, x):
-        """Forward pass"""
         return self.resnet(x)
+
+def test_model():
+    model = ResNet18FlowerClassifier(num_classes=5)
+    print("模型结构:")
+    print(model)
     
-    def unfreeze_layers(self, num_layers=2):
-        """
-        Unfreeze the last few layers for fine-tuning
-        
-        Args:
-            num_layers: Number of layers to unfreeze from the end
-        """
-        # Get all layers
-        layers = list(self.resnet.children())
-        
-        # Unfreeze the last num_layers
-        for layer in layers[-num_layers:]:
-            for param in layer.parameters():
-                param.requires_grad = True
-        
-        # Always unfreeze the final fully connected layer
-        for param in self.resnet.fc.parameters():
-            param.requires_grad = True
+    # 测试随机输入
+    x = torch.randn(4, 3, 224, 224)
+    output = model(x)
+    print(f"\n输入形状: {x.shape}")
+    print(f"输出形状: {output.shape}")
     
-    def get_trainable_parameters(self):
-        """Get trainable parameters for optimizer"""
-        return filter(lambda p: p.requires_grad, self.parameters())
+    return model
+
+if __name__ == "__main__":
+    test_model()
