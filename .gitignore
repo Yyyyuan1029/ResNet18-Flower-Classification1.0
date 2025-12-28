@@ -1,0 +1,25 @@
+# Python 缓存文件
+__pycache__/
+*.pyc
+*.pyo
+
+# 模型检查点（通常很大）
+checkpoints/
+*.pth
+*.pt
+*.h5
+
+# 数据集
+data/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# IDE 文件
+.vscode/
+.idea/
+
+# 日志文件
+logs/
+*.log

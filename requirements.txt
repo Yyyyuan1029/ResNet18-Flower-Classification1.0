@@ -1,0 +1,16 @@
+## Installation & Requirements
+
+### Prerequisites
+- Python 3.8 or higher
+- pip package manager
+
+### Installation
+```bash
+git clone https://github.com/your-username/ResNet18-Flower-Classification.git
+cd ResNet18-Flower-Classification
+pip install -r requirements.txt
+
+# Optional: Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
