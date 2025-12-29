@@ -4,8 +4,6 @@ __pycache__/
 *.pyo
 
 # 模型检查点（通常很大）
-checkpoints/
-*.pth
 *.pt
 *.h5
 
