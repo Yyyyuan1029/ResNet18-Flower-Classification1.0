@@ -1,0 +1,223 @@
+\documentclass[lettersize,journal]{IEEEtran}
+\usepackage{amsmath,amsfonts}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{array}
+\usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
+\usepackage{textcomp}
+\usepackage{stfloats}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{xcolor}
+\hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
+% updated with editorial comments 8/9/2021
+
+\begin{document}
+
+\title{Reproduction and Validation of ResNet18 Image Classification Model Based on Automatically Generated Dataset}
+
+\author{Siyuan Luo, 1230023518; Yuran Li, 1230019318}
+
+% The paper headers
+\markboth{The final project report of computer vision, September 2025}%
+{Shell \MakeLowercase{\textit{et al.}}: A Sample Article Using IEEEtran.cls for IEEE Journals}
+
+\IEEEpubid{Macau University of Science and Technology, CS460/ EIE460/ SE460}
+% Remember, if you use this you must call \IEEEpubidadjcol in the second
+% column for its text to clear the IEEEpubid mark.
+
+\maketitle
+
+\begin{abstract}
+This paper presents a comprehensive reproduction and validation of the ResNet18 model for image classification using automatically generated datasets. The primary objective is to demonstrate the complete deep learning workflow, from data preparation to model training, evaluation, and analysis. We employ transfer learning with a pre-trained ResNet18 model, fine-tuning it for flower classification tasks. The experimental validation is conducted on both simulated datasets and real-world flower datasets from Kaggle. Results indicate successful training with a test accuracy of 84.13\% on real data, while simulated data experiments validate the training pipeline despite lower accuracy due to data characteristics. The project's source code and documentation are available at: \url{https://github.com/Yyyyuan1029/ResNet18-Flower-Classification1.0}
+\end{abstract}
+
+\begin{IEEEkeywords}
+ResNet18, Image Classification, Deep Learning, PyTorch, Transfer Learning, Flower Recognition
+\end{IEEEkeywords}
+
+\section{Introduction}
+Image classification represents a fundamental task in computer vision, with applications spanning from medical imaging to autonomous driving. The ResNet (Residual Network) architecture, introduced by He et al. \cite{he2016deep}, revolutionized deep learning by addressing the vanishing gradient problem through skip connections, enabling the training of much deeper networks. ResNet18, as a lightweight variant of this architecture, provides an excellent balance between model complexity and performance, making it ideal for educational purposes and resource-constrained environments.
+
+This work addresses the challenge of demonstrating and validating a complete deep learning pipeline without requiring extensive computational resources or large-scale datasets. We propose a two-phase approach: first, using automatically generated simulated data to verify the training pipeline and understand model behavior; second, applying the validated pipeline to real-world flower classification using the Kaggle Flowers Recognition dataset. This methodology allows for systematic learning of deep learning fundamentals while achieving practical results.
+
+The primary contributions of this work include: (1) Implementation of a complete ResNet18-based classification pipeline in PyTorch; (2) Development of automatic dataset generation for pipeline validation; (3) Application to real-world flower classification achieving 84.13\% test accuracy; (4) Comprehensive analysis of training dynamics and model performance. Our experimental results demonstrate the effectiveness of transfer learning with ResNet18 for flower classification while providing insights into training behavior with different data characteristics.
+
+\section{Related Work}
+Deep learning for image classification has evolved significantly since the introduction of AlexNet \cite{krizhevsky2012imagenet}. Subsequent architectures including VGGNet \cite{simonyan2014very}, GoogLeNet \cite{szegedy2015going}, and ResNet \cite{he2016deep} have progressively improved performance on benchmark datasets like ImageNet. ResNet's residual connections enable training of much deeper networks without degradation, making it a cornerstone of modern computer vision.
+
+In the specific domain of flower classification, several approaches have been explored. Nilsback and Zisserman \cite{nilsback2008automated} presented a comprehensive study on flower classification using multiple visual features. More recently, deep learning approaches have dominated, with transfer learning from ImageNet-pretrained models proving particularly effective due to the similarity of flower images to natural images in ImageNet.
+
+Our work differs from existing approaches in its educational focus and two-phase methodology. While most research focuses solely on achieving state-of-the-art performance on established datasets, we prioritize understanding the complete training pipeline and demonstrating the impact of data quality on model performance. By first validating the pipeline with simulated data and then applying it to real data, we provide a clear pedagogical pathway for understanding deep learning fundamentals.
+
+\section{Technical Solution}
+\subsection{Model Architecture}
+We employ the ResNet18 architecture, which consists of 18 layers with residual connections. The model is initialized with weights pre-trained on ImageNet, leveraging transfer learning to accelerate convergence and improve performance on our flower classification task. The architecture can be mathematically represented as:
+
+\begin{equation}
+y = \mathcal{F}(x, \{W_i\}) + x
+\end{equation}
+
+where $x$ and $y$ are the input and output vectors of the layers being considered, and $\mathcal{F}(x, \{W_i\})$ represents the residual mapping to be learned. For our 5-class flower classification problem, we modify the final fully connected layer to output 5 classes instead of the original 1000 ImageNet classes.
+
+\subsection{Data Pipeline}
+Our approach implements two distinct data pipelines:
+
+1. \textbf{Simulated Data Generation}: We create synthetic flower images programmatically to validate the training pipeline without requiring real data. This approach generates 150 images across 3 categories (rose, tulip, daisy) with dimensions 224×224×3, matching ResNet's input requirements.
+
+2. \textbf{Real Data Processing}: For practical validation, we use the Kaggle Flowers Recognition dataset containing 4242 images across 5 flower categories. We apply standard preprocessing including resizing, normalization, and data augmentation (random cropping, horizontal flipping, and color jittering) to improve generalization.
+
+\subsection{Training Strategy}
+We employ a transfer learning approach with the following configuration:
+\begin{itemize}
+\item \textbf{Base Model}: ResNet18 with ImageNet pretrained weights
+\item \textbf{Fine-tuning}: Initially freeze all layers except the final classifier, then optionally unfreeze deeper layers
+\item \textbf{Loss Function}: Cross-entropy loss: $L = -\sum_{c=1}^{M} y_{o,c} \log(p_{o,c})$
+\item \textbf{Optimizer}: Stochastic Gradient Descent (SGD) with learning rate $\eta = 0.001$ and momentum $\mu = 0.9$
+\item \textbf{Batch Size}: 16 for simulated data, 8 for real data (due to memory constraints)
+\item \textbf{Epochs}: 5 for simulated validation, 10 for real data training
+\end{itemize}
+
+The training process follows the standard forward-backward propagation with gradient descent optimization. We monitor both training loss and validation accuracy to assess model performance and detect overfitting.
+
+\section{Experiments}
+\subsection{Experimental Setup}
+Our experiments were conducted on a Windows 10/11 system with Python 3.8, PyTorch 1.13, and Matplotlib 3.7. Both CPU-only and GPU-enabled configurations were tested, with the final real-data training utilizing GPU acceleration where available.
+
+\subsubsection{Datasets}
+\begin{table}[htbp]
+\caption{Dataset Specifications}
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Dataset Type} & \textbf{Classes} & \textbf{Training Samples} & \textbf{Test Samples} & \textbf{Image Size} \\ \hline
+Simulated & 3 & 120 (80\%) & 30 (20\%) & 224×224×3 \\ \hline
+Real (Kaggle) & 5 & 2,963 (70\%) & 991 (30\%) & 224×224×3 \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Hyperparameters}
+\begin{table}[htbp]
+\caption{Training Hyperparameters}
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Parameter} & \textbf{Simulated Data} & \textbf{Real Data} \\ \hline
+Learning Rate & 0.001 & 0.001 \\ \hline
+Batch Size & 16 & 8 \\ \hline
+Epochs & 5 & 10 \\ \hline
+Optimizer & SGD (momentum=0.9) & SGD (momentum=0.9) \\ \hline
+Weight Decay & 0.0001 & 0.0001 \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Results and Analysis}
+\subsubsection{Simulated Data Experiments}
+Training on simulated data successfully validated our pipeline, with training loss decreasing from 1.1254 to 0.9108 over 5 epochs. However, test accuracy remained low (13.3\%-20.0\%), which was expected given the random nature of the generated images. This outcome confirms that while the training mechanics function correctly, meaningful learning requires semantically relevant data.
+
+\begin{table}[htbp]
+\caption{Simulated Data Training Results}
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Epoch} & \textbf{Training Loss} & \textbf{Test Accuracy} \\ \hline
+1 & 1.1254 & 13.33\% \\ \hline
+2 & 1.0528 & 16.67\% \\ \hline
+3 & 0.9876 & 13.33\% \\ \hline
+4 & 0.9452 & 20.00\% \\ \hline
+5 & 0.9108 & 16.67\% \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Real Data Experiments}
+On the real flower dataset, our model achieved significantly better performance:
+\begin{itemize}
+\item \textbf{Final Test Accuracy}: 84.13\%
+\item \textbf{Best Validation Accuracy}: 85.98\%
+\item \textbf{Final Training Accuracy}: 66.1\%
+\item \textbf{Total Training Time}: 31.2 minutes
+\item \textbf{Model Size}: 44.7 MB
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{docs/images/training_history.png}
+\caption{Training and validation metrics over 10 epochs on real data. (Left) Loss curves showing convergence. (Right) Accuracy progression demonstrating learning.}
+\label{fig:training_history}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{docs/images/training_history_simple.png}
+\caption{Simplified visualization of accuracy trend, showing consistent improvement over training epochs.}
+\label{fig:training_simple}
+\end{figure}
+
+The results demonstrate several key observations:
+\begin{enumerate}
+\item \textbf{Effective Learning}: The model successfully learns discriminative features for flower classification, achieving 84.13\% test accuracy.
+\item \textbf{Underfitting Indication}: The training accuracy (66.1\%) being lower than validation accuracy (85.98\%) suggests potential underfitting, indicating room for further optimization with more training or architectural adjustments.
+\item \textbf{Strong Generalization}: Consistent performance on unseen test data indicates good generalization capability.
+\end{enumerate}
+
+\section{Discussion}
+Our experiments reveal important insights about deep learning model training and validation:
+
+\subsection{Strengths}
+1. \textbf{Pipeline Validation}: The simulated data approach successfully validated our training pipeline, confirming proper implementation of data loading, model forwarding, backward propagation, and optimization.
+2. \textbf{Effective Transfer Learning}: Using ImageNet-pretrained ResNet18 weights enabled rapid convergence and strong performance on the flower classification task.
+3. \textbf{Resource Efficiency}: The approach works effectively on standard consumer hardware, making it accessible for educational purposes.
+
+\subsection{Limitations}
+1. \textbf{Data Dependency}: The dramatic difference between simulated and real data results underscores the critical importance of data quality in deep learning.
+2. \textbf{Underfitting}: The gap between training and validation performance suggests the model capacity may not be fully utilized or that training could benefit from additional epochs or architectural adjustments.
+3. \textbf{Class Imbalance}: The real dataset exhibits some class imbalance which may affect model performance on minority classes.
+
+\subsection{Future Improvements}
+Future work could explore:
+1. \textbf{Advanced Data Augmentation}: Implementing more sophisticated augmentation techniques like MixUp, CutMix, or AutoAugment.
+2. \textbf{Architectural Modifications}: Experimenting with attention mechanisms, different classifier heads, or ensemble methods.
+3. \textbf{Hyperparameter Optimization}: Systematic search for optimal learning rates, batch sizes, and regularization parameters.
+4. \textbf{Explainability Analysis}: Applying techniques like Grad-CAM to visualize which image regions contribute to classification decisions.
+
+\section{Conclusion}
+This paper presented a comprehensive reproduction and validation of the ResNet18 model for image classification. We developed and demonstrated a complete deep learning pipeline using both simulated data for methodological validation and real flower data for practical application. Our approach successfully achieved 84.13\% test accuracy on the Kaggle Flowers Recognition dataset, validating the effectiveness of transfer learning with ResNet18 for flower classification tasks.
+
+The work highlights several key insights: (1) Proper pipeline validation with controlled data is crucial before applying models to real problems; (2) Transfer learning with pre-trained models provides substantial benefits for domain-specific tasks; (3) Data quality fundamentally determines model performance despite algorithmic correctness. The complete implementation, including code, documentation, and trained models, is publicly available to support further research and education in deep learning.
+
+\section{Description of member contributions}
+\begin{itemize}
+\item \textbf{Siyuan Luo (1230023518)}: Responsible for environment setup, automatic dataset generation code implementation, ResNet18 model initialization, training code development and debugging, Git repository management, and overall project coordination.
+\item \textbf{Yuran Li (1230019318)}: Responsible for results visualization, experimental data organization and analysis, report writing and formatting, performance metric calculation, and documentation.
+\end{itemize}
+
+Both team members contributed to experimental design, result interpretation, and paper preparation, with regular collaboration and review sessions throughout the project.
+
+\begin{thebibliography}{1}
+\bibliographystyle{IEEEtran}
+
+\bibitem{he2016deep}
+K. He, X. Zhang, S. Ren, and J. Sun, "Deep residual learning for image recognition," in \textit{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}, 2016, pp. 770-778.
+
+\bibitem{krizhevsky2012imagenet}
+A. Krizhevsky, I. Sutskever, and G. E. Hinton, "Imagenet classification with deep convolutional neural networks," in \textit{Advances in Neural Information Processing Systems (NeurIPS)}, 2012, pp. 1097-1105.
+
+\bibitem{simonyan2014very}
+K. Simonyan and A. Zisserman, "Very deep convolutional networks for large-scale image recognition," in \textit{International Conference on Learning Representations (ICLR)}, 2015.
+
+\bibitem{szegedy2015going}
+C. Szegedy, W. Liu, Y. Jia, P. Sermanet, S. Reed, D. Anguelov, D. Erhan, V. Vanhoucke, and A. Rabinovich, "Going deeper with convolutions," in \textit{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}, 2015, pp. 1-9.
+
+\bibitem{nilsback2008automated}
+M. E. Nilsback and A. Zisserman, "Automated flower classification over a large number of classes," in \textit{Proceedings of the Indian Conference on Computer Vision, Graphics and Image Processing (ICVGIP)}, 2008.
+
+\bibitem{deng2009imagenet}
+J. Deng, W. Dong, R. Socher, L. J. Li, K. Li, and L. Fei-Fei, "ImageNet: A large-scale hierarchical image database," in \textit{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}, 2009, pp. 248-255.
+
+\bibitem{paszke2019pytorch}
+A. Paszke et al., "PyTorch: An imperative style, high-performance deep learning library," in \textit{Advances in Neural Information Processing Systems (NeurIPS)}, 2019, pp. 8024-8035.
+
+\end{thebibliography}
+\end{document}
