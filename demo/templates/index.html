@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResNet18花卉分类系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .upload-section, .results-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            color: #4facfe;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #4facfe;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area:hover {
+            background: #f0f8ff;
+            transform: translateY(-2px);
+        }
+        
+        .upload-area i {
+            font-size: 3em;
+            color: #4facfe;
+            margin-bottom: 15px;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+        
+        .preview-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        #previewImage {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading i {
+            font-size: 2em;
+            color: #4facfe;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .prediction-result {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .flower-card {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .flower-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        
+        .confidence-bar {
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .info-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .flowers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .flower-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .flower-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #666;
+            margin-top: 30px;
+            border-top: 1px solid #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌺 ResNet18花卉分类系统</h1>
+            <p>基于深度学习的智能花卉识别</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="upload-section">
+                <h2 class="section-title">
+                    <i class="fas fa-upload"></i>
+                    上传花朵图片
+                </h2>
+                
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>拖拽图片到此处，或点击选择文件</p>
+                    <button class="upload-btn">选择文件</button>
+                </div>
+                
+                <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+                
+                <div class="preview-container">
+                    <img id="previewImage" src="" alt="预览">
+                </div>
+                
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>正在识别花朵...</p>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-bar"></i>
+                    预测结果
+                </h2>
+                
+                <div id="results" class="results">
+                    <!-- 预测结果将在这里显示 -->
+                </div>
+                
+                <div id="noResults">
+                    <div class="flower-card">
+                        <i class="fas fa-seedling" style="font-size: 3em; color: #4facfe;"></i>
+                        <h3>等待上传图片</h3>
+                        <p>上传花朵图片后，系统将自动识别并显示结果</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">模型架构</div>
+                <div class="info-value">ResNet18</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">训练数据</div>
+                <div class="info-value">5类花卉</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">参数量</div>
+                <div class="info-value">11.2M</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">训练时间</div>
+                <div class="info-value">31.2分钟</div>
+            </div>
+        </div>
+        
+        <div style="padding: 30px;">
+            <h2 class="section-title">
+                <i class="fas fa-leaf"></i>
+                支持识别的花卉
+            </h2>
+            
+            <div class="flowers-grid" id="flowersGrid">
+                <!-- 花卉列表将在这里动态加载 -->
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>ResNet18花卉分类系统 &copy; 2025 | 基于深度学习的花卉识别</p>
+        </div>
+    </div>
+    
+    <script>
+        // 定义花卉类别信息（从后端传递）
+        // 注意：这里我们直接定义，因为Flask模板变量传递可能会有问题
+        const FLOWER_CLASSES = [
+            {"id":0,"name":"Daisy","chinese":"雏菊","color":"#FFD700","icon":"🌼","description":"雏菊是菊科植物的一种，常见于欧洲，花语是天真、和平、希望。"},
+            {"id":1,"name":"Dandelion","chinese":"蒲公英","color":"#FFA500","icon":"🌼","description":"蒲公英是菊科蒲公英属植物，具有药用价值，花语是勇敢、自信、自由。"},
+            {"id":2,"name":"Rose","chinese":"玫瑰","color":"#FF1493","icon":"🌹","description":"玫瑰是蔷薇科植物，象征爱情与美丽，花语是爱情、浪漫、热情。"},
+            {"id":3,"name":"Sunflower","chinese":"向日葵","color":"#FFD700","icon":"🌻","description":"向日葵是菊科植物，面向太阳生长，花语是忠诚、阳光、积极。"},
+            {"id":4,"name":"Tulip","chinese":"郁金香","color":"#800080","icon":"🌷","description":"郁金香是百合科植物，原产中亚，花语是永恒的爱、高贵、优雅。"}
+        ];
+        
+        // 初始化时加载花卉列表
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFlowerList();
+        });
+        
+        function loadFlowerList() {
+            const flowersGrid = document.getElementById('flowersGrid');
+            
+            flowersGrid.innerHTML = '';
+            FLOWER_CLASSES.forEach(flower => {
+                const flowerItem = document.createElement('div');
+                flowerItem.className = 'flower-item';
+                flowerItem.innerHTML = `
+                    <div class="flower-icon">${flower.icon}</div>
+                    <h3>${flower.name}</h3>
+                    <p>${flower.chinese}</p>
+                `;
+                flowerItem.style.borderTop = `3px solid ${flower.color}`;
+                flowersGrid.appendChild(flowerItem);
+            });
+        }
+        
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // 显示预览
+            const preview = document.getElementById('previewImage');
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                
+                // 上传并预测
+                uploadAndPredict(file);
+            }
+            
+            reader.readAsDataURL(file);
+        }
+        
+        function uploadAndPredict(file) {
+            const loading = document.getElementById('loading');
+            const resultsDiv = document.getElementById('results');
+            const noResultsDiv = document.getElementById('noResults');
+            
+            // 显示加载动画，隐藏结果
+            loading.style.display = 'block';
+            resultsDiv.style.display = 'none';
+            noResultsDiv.style.display = 'none';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    displayResults(data);
+                    resultsDiv.style.display = 'block';
+                } else {
+                    displayError(data.error);
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                displayError('网络错误: ' + error.message);
+            });
+        }
+        
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            
+            // 查找匹配的花卉信息
+            const flowerInfo = FLOWER_CLASSES.find(f => f.name === data.predicted_class) || 
+                              {name: data.predicted_class, chinese: data.predicted_chinese, color: "#4facfe", icon: "🌼"};
+            
+            // 创建结果HTML
+            const resultHTML = `
+                <div class="prediction-result" style="border-top: 3px solid ${flowerInfo.color};">
+                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 2em;">${flowerInfo.icon}</div>
+                            <h2 style="color: ${flowerInfo.color}; margin: 10px 0;">${data.predicted_class}</h2>
+                            <p style="font-size: 1.2em; color: #666;">${data.predicted_chinese}</p>
+                        </div>
+                        <div style="flex: 2;">
+                            <img src="data:image/jpeg;base64,${data.visualization.image_base64}" 
+                                 style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px;">
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 20px 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>置信度</span>
+                            <span>${(data.confidence * 100).toFixed(2)}%</span>
+                        </div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${data.confidence * 100}%; background: ${flowerInfo.color};"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                        <h4 style="margin-bottom: 15px; color: #666;">各类别概率分布</h4>
+                        <div style="display: grid; gap: 10px;">
+                            ${data.class_probabilities.map(item => {
+                                const clsInfo = FLOWER_CLASSES.find(f => f.name === item.name) || 
+                                               {name: item.name, chinese: item.chinese, color: "#999"};
+                                return `
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 20px; height: 20px; border-radius: 50%; background: ${clsInfo.color || '#999'};"></div>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span>${item.chinese} (${item.name})</span>
+                                            <span>${(item.probability * 100).toFixed(2)}%</span>
+                                        </div>
+                                        <div class="confidence-bar">
+                                            <div class="confidence-fill" style="width: ${item.probability * 100}%; background: ${clsInfo.color || '#999'};"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `}).join('')}
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: #e8f4ff; border-radius: 10px; border-left: 4px solid #4facfe;">
+                        <h4 style="color: #4facfe; margin-bottom: 10px;">预测信息</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <div>
+                                <div style="font-size: 0.9em; color: #666;">预测时间</div>
+                                <div style="font-weight: bold;">${data.timestamp}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9em; color: #666;">最高置信度</div>
+                                <div style="font-weight: bold;">${(data.confidence * 100).toFixed(2)}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = resultHTML;
+        }
+        
+        function displayError(error) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="prediction-result" style="border-top: 3px solid #ff4757;">
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3em; color: #ff4757;"></i>
+                        <h2 style="color: #ff4757; margin: 20px 0;">预测失败</h2>
+                        <p style="color: #666;">${error}</p>
+                        <button class="upload-btn" onclick="document.getElementById('fileInput').click()" style="margin-top: 20px;">
+                            <i class="fas fa-redo"></i> 重新上传
+                        </button>
+                    </div>
+                </div>
+            `;
+            resultsDiv.style.display = 'block';
+        }
+        
+        // 拖拽上传功能
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.background = '#f0f8ff';
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.background = 'white';
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.background = 'white';
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const fileInput = document.getElementById('fileInput');
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                
+                // 触发change事件
+                fileInput.dispatchEvent(new Event('change'));
+            } else {
+                alert('请拖拽图片文件');
+            }
+        });
+    </script>
+</body>
+</html>
